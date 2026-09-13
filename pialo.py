@@ -20,36 +20,35 @@ if url:
             try:
                 with tempfile.TemporaryDirectory() as tmpdir:
                     
-                    # Opciones preparadas para funcionar en la nube (Streamlit Cloud)
+                    # Usamos 'web_creator' que no tiene los problemas de formatos que tiene el cliente ios
                     opciones_anti_bloqueo = {
                         'noplaylist': True,
                         'quiet': True,
                         'no_warnings': True,
                         'extractor_args': {
                             'youtube': {
-                                'player_client': ['ios'],
-                                'formats': ['missing_pot']
+                                'player_client': ['web_creator']
                             }
                         }
                     }
 
-                    # Buscamos el archivo cookies.txt que subiste a GitHub
+                    # Buscamos tu archivo cookies.txt en el repositorio de GitHub
                     if os.path.exists("cookies.txt"):
                         opciones_anti_bloqueo['cookiefile'] = 'cookies.txt'
                     else:
-                        st.warning("⚠️ No se encontró el archivo 'cookies.txt'. El script intentará descargar sin credenciales, pero podría fallar.")
+                        st.warning("⚠️ No se encontró el archivo 'cookies.txt'. Recordá subirlo para evitar bloqueos por bot.")
 
                     if opcion == "Video (MP4)":
                         ydl_opts = {
-                            # Corregido: Si falla el protocolo m3u8_native, salta automáticamente al mejor MP4 clásico disponible
-                            'format': 'bv[protocol=m3u8_native]+ba[protocol=m3u8_native]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+                            # Buscamos el mejor formato de video combinando audio y video sin exigir protocolos raros
+                            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
                             'outtmpl': os.path.join(tmpdir, '%(title)s.%(ext)s'),
                             **opciones_anti_bloqueo
                         }
                     else:
                         ydl_opts = {
-                            # Corregido: Busca el mejor audio disponible en cualquier protocolo compatible
-                            'format': 'ba[protocol=m3u8_native]/bestaudio/best',
+                            # Descarga el mejor audio directo disponible en YouTube
+                            'format': 'bestaudio/best',
                             'outtmpl': os.path.join(tmpdir, '%(title)s.%(ext)s'),
                             'postprocessors': [{
                                 'key': 'FFmpegExtractAudio',
