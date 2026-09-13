@@ -15,43 +15,50 @@ url = st.text_input("🔗 Enlace de YouTube:")
 opcion = st.radio("¿Qué formato preferís?", ("Video (MP4)", "Solo Audio (MP3)"))
 
 if url:
-    # Creamos un botón web para iniciar el proceso
     if st.button("🚀 Preparar descarga"):
         with st.spinner("Procesando el video... Esperá un momento..."):
             try:
-                # Usamos una carpeta temporal del servidor para procesar el archivo
                 with tempfile.TemporaryDirectory() as tmpdir:
                     
+                    # Estas opciones ayudan a esquivar el bloqueo de YouTube (Error 403)
+                    opciones_anti_bloqueo = {
+                        'noplaylist': True,
+                        'quiet': True,
+                        'no_warnings': True,
+                        'http_headers': {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                            'Accept-Language': 'en-US,en;q=0.5',
+                        }
+                    }
+
                     if opcion == "Video (MP4)":
                         ydl_opts = {
                             'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
                             'outtmpl': os.path.join(tmpdir, '%(title)s.%(ext)s'),
-                            'noplaylist': True, # Esto evita que baje listas enteras por error
+                            **opciones_anti_bloqueo
                         }
                     else:
                         ydl_opts = {
                             'format': 'bestaudio/best',
                             'outtmpl': os.path.join(tmpdir, '%(title)s.%(ext)s'),
-                            'noplaylist': True,
                             'postprocessors': [{
                                 'key': 'FFmpegExtractAudio',
                                 'preferredcodec': 'mp3',
                                 'preferredquality': '192',
                             }],
+                            **opciones_anti_bloqueo
                         }
 
                     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                         info = ydl.extract_info(url, download=True)
                         filename = ydl.prepare_filename(info)
                         
-                        # Si elegimos MP3, yt-dlp cambia la extensión al final del proceso
                         if opcion == "Solo Audio (MP3)":
-                            filename = os.path.splitext(filename)[0] + ".mp3"
+                            filename = os.path.splitext(filename) + ".mp3"
 
-                    # Leemos el archivo descargado para dárselo al usuario
                     with open(filename, "rb") as file:
                         st.success("✨ ¡Tu archivo está listo!")
-                        # Crea el botón web oficial para guardar el archivo en la PC/Celular del usuario
                         st.download_button(
                             label="📥 Descargar archivo en tu dispositivo",
                             data=file,
