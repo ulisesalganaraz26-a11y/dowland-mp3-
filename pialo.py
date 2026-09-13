@@ -2,6 +2,13 @@ import streamlit as st
 import yt_dlp
 import os
 import tempfile
+import subprocess
+
+# Intentar actualizar yt-dlp automáticamente para mantener los parches al día
+try:
+    subprocess.run(["pip", "install", "--upgrade", "yt-dlp"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+except Exception:
+    pass
 
 # Título y diseño de la página web
 st.set_page_config(page_title="Mi Descargador de YouTube", page_icon="🎵")
@@ -20,14 +27,21 @@ if url:
             try:
                 with tempfile.TemporaryDirectory() as tmpdir:
                     
-                    # Estas opciones ayudan a esquivar el bloqueo de YouTube (Error 403)
+                    # Opciones optimizadas para saltar las restricciones actuales de YouTube
                     opciones_anti_bloqueo = {
                         'noplaylist': True,
                         'quiet': True,
                         'no_warnings': True,
+                        # Forzar el uso de clientes web y android específicos para evitar el 403
+                        'extractor_args': {
+                            'youtube': {
+                                'player_client': ['android', 'web'],
+                                'skip': ['dash', 'hls']
+                            }
+                        },
                         'http_headers': {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                             'Accept-Language': 'en-US,en;q=0.5',
                         }
                     }
@@ -55,7 +69,9 @@ if url:
                         filename = ydl.prepare_filename(info)
                         
                         if opcion == "Solo Audio (MP3)":
-                            filename = os.path.splitext(filename) + ".mp3"
+                            # Corrección en el renombrado automático de extensión
+                            base, _ = os.path.splitext(filename)
+                            filename = base + ".mp3"
 
                     with open(filename, "rb") as file:
                         st.success("✨ ¡Tu archivo está listo!")
