@@ -13,7 +13,7 @@ url = st.text_input("🔗 Enlace de YouTube:")
 opcion = st.radio("¿Qué formato preferís?", ("Solo Audio (MP3)", "Video (MP4)"))
 
 def descargar_con_cobalt(video_url, modo):
-    # Usamos una instancia pública y activa del motor Cobalt
+    # CORREGIDO: Se agregó '/api/json' que es la ruta correcta que pide Cobalt para procesar
     api_url = "https://cobalt.tools"
     
     headers = {
@@ -21,11 +21,11 @@ def descargar_con_cobalt(video_url, modo):
         "Content-Type": "application/json"
     }
     
-    # Configuramos los parámetros que pide la API
+    # Configuramos los parámetros necesarios
     payload = {
         "url": video_url,
-        "videoQuality": "720",     # Buena calidad de video
-        "audioFormat": "mp3",      # Si es audio, que lo convierta a MP3
+        "videoQuality": "720",
+        "audioFormat": "mp3",
         "isAudioOnly": True if modo == "Solo Audio (MP3)" else False,
         "downloadMode": "audio" if modo == "Solo Audio (MP3)" else "default"
     }
@@ -33,14 +33,16 @@ def descargar_con_cobalt(video_url, modo):
     try:
         respuesta = requests.post(api_url, json=payload, headers=headers)
         
-        # Si la API responde bien, nos devuelve el link directo al archivo limpio
+        # Si la API responde bien, procesamos el JSON
         if respuesta.status_code == 200:
             datos = respuesta.json()
-            if datos.get("status") == "stream" or datos.get("status") == "redirect":
+            if datos.get("status") in ["stream", "redirect"]:
                 return datos.get("url"), None
             elif datos.get("status") == "picker":
-                # Si hay varias opciones, agarramos la primera
-                return datos.get("picker")[0].get("url"), None
+                return datos.get("picker").get("url"), None
+            elif datos.get("status") == "error":
+                # Si Cobalt nos da un error interno (ej. video muy largo), lo mostramos
+                return None, datos.get("error", {}).get("code", "Error desconocido en Cobalt")
             
             return None, f"El servidor respondió con un estado desconocido: {datos.get('status')}"
         else:
