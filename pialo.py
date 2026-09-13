@@ -20,7 +20,7 @@ if url:
             try:
                 with tempfile.TemporaryDirectory() as tmpdir:
                     
-                    # Usamos 'web_creator' que no tiene los problemas de formatos que tiene el cliente ios
+                    # Opciones para saltar las restricciones de bots en la nube
                     opciones_anti_bloqueo = {
                         'noplaylist': True,
                         'quiet': True,
@@ -40,14 +40,14 @@ if url:
 
                     if opcion == "Video (MP4)":
                         ydl_opts = {
-                            # Buscamos el mejor formato de video combinando audio y video sin exigir protocolos raros
-                            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+                            # Simplificado al máximo: descarga el mejor archivo único compatible con MP4 sin mezclas complejas
+                            'format': 'best[ext=mp4]/best',
                             'outtmpl': os.path.join(tmpdir, '%(title)s.%(ext)s'),
                             **opciones_anti_bloqueo
                         }
                     else:
                         ydl_opts = {
-                            # Descarga el mejor audio directo disponible en YouTube
+                            # Simplificado al máximo: descarga el mejor audio disponible en general
                             'format': 'bestaudio/best',
                             'outtmpl': os.path.join(tmpdir, '%(title)s.%(ext)s'),
                             'postprocessors': [{
