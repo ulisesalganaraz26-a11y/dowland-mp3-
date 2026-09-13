@@ -2,13 +2,6 @@ import streamlit as st
 import yt_dlp
 import os
 import tempfile
-import subprocess
-
-# Intentar actualizar yt-dlp automáticamente para mantener los parches al día
-try:
-    subprocess.run(["pip", "install", "--upgrade", "yt-dlp"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-except Exception:
-    pass
 
 # Título y diseño de la página web
 st.set_page_config(page_title="Mi Descargador de YouTube", page_icon="🎵")
@@ -27,34 +20,29 @@ if url:
             try:
                 with tempfile.TemporaryDirectory() as tmpdir:
                     
-                    # Opciones optimizadas para saltar las restricciones actuales de YouTube
+                    # Esta configuración usa la API de iOS para evitar los PO Tokens del cliente Web que tiran 403
                     opciones_anti_bloqueo = {
                         'noplaylist': True,
                         'quiet': True,
                         'no_warnings': True,
-                        # Forzar el uso de clientes web y android específicos para evitar el 403
                         'extractor_args': {
                             'youtube': {
-                                'player_client': ['android', 'web'],
-                                'skip': ['dash', 'hls']
+                                'player_client': ['ios'],
+                                'formats': ['missing_pot']
                             }
-                        },
-                        'http_headers': {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                            'Accept-Language': 'en-US,en;q=0.5',
                         }
                     }
 
                     if opcion == "Video (MP4)":
                         ydl_opts = {
-                            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+                            # Usamos protocolos m3u8_native que funcionan de maravilla bajo el cliente iOS
+                            'format': 'bv[protocol=m3u8_native]+ba[protocol=m3u8_native]/best[ext=mp4]/best',
                             'outtmpl': os.path.join(tmpdir, '%(title)s.%(ext)s'),
                             **opciones_anti_bloqueo
                         }
                     else:
                         ydl_opts = {
-                            'format': 'bestaudio/best',
+                            'format': 'ba[protocol=m3u8_native]/bestaudio/best',
                             'outtmpl': os.path.join(tmpdir, '%(title)s.%(ext)s'),
                             'postprocessors': [{
                                 'key': 'FFmpegExtractAudio',
@@ -69,7 +57,6 @@ if url:
                         filename = ydl.prepare_filename(info)
                         
                         if opcion == "Solo Audio (MP3)":
-                            # Corrección en el renombrado automático de extensión
                             base, _ = os.path.splitext(filename)
                             filename = base + ".mp3"
 
