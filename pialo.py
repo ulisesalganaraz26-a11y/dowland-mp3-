@@ -33,7 +33,7 @@ if url:
                         }
                     }
 
-                    # Ahora 'os' ya está importado correctamente antes de usarse acá abajo
+                    # Buscamos el archivo cookies.txt que subiste a GitHub
                     if os.path.exists("cookies.txt"):
                         opciones_anti_bloqueo['cookiefile'] = 'cookies.txt'
                     else:
@@ -41,12 +41,14 @@ if url:
 
                     if opcion == "Video (MP4)":
                         ydl_opts = {
-                            'format': 'bv[protocol=m3u8_native]+ba[protocol=m3u8_native]/best[ext=mp4]/best',
+                            # Corregido: Si falla el protocolo m3u8_native, salta automáticamente al mejor MP4 clásico disponible
+                            'format': 'bv[protocol=m3u8_native]+ba[protocol=m3u8_native]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
                             'outtmpl': os.path.join(tmpdir, '%(title)s.%(ext)s'),
                             **opciones_anti_bloqueo
                         }
                     else:
                         ydl_opts = {
+                            # Corregido: Busca el mejor audio disponible en cualquier protocolo compatible
                             'format': 'ba[protocol=m3u8_native]/bestaudio/best',
                             'outtmpl': os.path.join(tmpdir, '%(title)s.%(ext)s'),
                             'postprocessors': [{
