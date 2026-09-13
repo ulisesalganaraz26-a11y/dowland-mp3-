@@ -20,7 +20,7 @@ if url:
             try:
                 with tempfile.TemporaryDirectory() as tmpdir:
                     
-                    # Opciones para saltar las restricciones de bots en la nube
+                    # Opciones listas para inyectar las cookies de Chrome
                     opciones_anti_bloqueo = {
                         'noplaylist': True,
                         'quiet': True,
@@ -32,22 +32,20 @@ if url:
                         }
                     }
 
-                    # Buscamos tu archivo cookies.txt en el repositorio de GitHub
+                    # Validamos el archivo cookies.txt de Chrome
                     if os.path.exists("cookies.txt"):
                         opciones_anti_bloqueo['cookiefile'] = 'cookies.txt'
                     else:
-                        st.warning("⚠️ No se encontró el archivo 'cookies.txt'. Recordá subirlo para evitar bloqueos por bot.")
+                        st.warning("⚠️ No se encontró el archivo 'cookies.txt'. Verificá que esté subido en GitHub.")
 
                     if opcion == "Video (MP4)":
                         ydl_opts = {
-                            # Simplificado al máximo: descarga el mejor archivo único compatible con MP4 sin mezclas complejas
                             'format': 'best[ext=mp4]/best',
                             'outtmpl': os.path.join(tmpdir, '%(title)s.%(ext)s'),
                             **opciones_anti_bloqueo
                         }
                     else:
                         ydl_opts = {
-                            # Simplificado al máximo: descarga el mejor audio disponible en general
                             'format': 'bestaudio/best',
                             'outtmpl': os.path.join(tmpdir, '%(title)s.%(ext)s'),
                             'postprocessors': [{
