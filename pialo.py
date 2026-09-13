@@ -20,11 +20,14 @@ if url:
             try:
                 with tempfile.TemporaryDirectory() as tmpdir:
                     
-                    # Esta configuración usa la API de iOS para evitar los PO Tokens del cliente Web que tiran 403
+                    # Configuración definitiva usando cookies para pasar la verificación de bot
                     opciones_anti_bloqueo = {
                         'noplaylist': True,
                         'quiet': True,
                         'no_warnings': True,
+                        # IMPORTANTE: Lee las cookies de tu navegador para autenticarte ante YouTube
+                        # Podés cambiar 'chrome' por 'firefox', 'edge', 'brave', 'opera' o 'safari'
+                        'cookiesfrombrowser': ('opera', None, None, None), 
                         'extractor_args': {
                             'youtube': {
                                 'player_client': ['ios'],
@@ -35,7 +38,6 @@ if url:
 
                     if opcion == "Video (MP4)":
                         ydl_opts = {
-                            # Usamos protocolos m3u8_native que funcionan de maravilla bajo el cliente iOS
                             'format': 'bv[protocol=m3u8_native]+ba[protocol=m3u8_native]/best[ext=mp4]/best',
                             'outtmpl': os.path.join(tmpdir, '%(title)s.%(ext)s'),
                             **opciones_anti_bloqueo
